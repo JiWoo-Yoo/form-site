@@ -1,0 +1,111 @@
+import React, { useEffect, useState } from "react";
+import {
+  List,
+  ListItem,
+  ListItemText,
+  Typography,
+  Paper,
+  Button,
+} from "@mui/material";
+import SurveyForm from "./SurveyForm";
+import { Add } from "@mui/icons-material";
+
+type Question = {
+  id: string;
+  questionText: string;
+  type: "text" | "multipleChoice";
+  options?: { id: string; optionText: string }[];
+};
+
+type Survey = {
+  id: string;
+  title: string;
+  questions: Question[];
+};
+
+const SurveyManager: React.FC = () => {
+  const [selectedSurvey, setSelectedSurvey] = useState<Survey | null>(null);
+  const [savedSurveys, setSavedSurveys] = useState<Survey[]>([]);
+
+  useEffect(() => {
+    const surveyData = localStorage.getItem("survey_data"); // 저장된 설문 불러오기
+    if (surveyData) {
+      try {
+        const parsedSurveys: Survey[] = JSON.parse(surveyData);
+        setSavedSurveys(parsedSurveys);
+      } catch (error) {
+        console.error(
+          "로컬스토리지에서 데이터를 파싱하는 데 실패했습니다:",
+          error
+        );
+        // 파싱에 실패하면 기본 설문 데이터를 유지하거나, 오류 처리 로직을 추가할 수 있습니다.
+      }
+    }
+  }, []);
+
+  // 로컬스토리지에 데이터를 저장하는 함수
+  const saveSurveysToLocalStorage = (surveys: Survey[]) => {
+    try {
+      const serializedData = JSON.stringify(surveys);
+      localStorage.setItem("survey_data", serializedData);
+    } catch (error) {
+      console.error("로컬스토리지에 데이터를 저장하는 데 실패했습니다:", error);
+    }
+  };
+
+  const createNewSurvey = () => {
+    const newSurvey: Survey = {
+      id: String(Date.now()),
+      title: "제목 없음",
+      questions: [],
+    };
+
+    const updatedSurveys = [...savedSurveys, newSurvey];
+    setSavedSurveys(updatedSurveys);
+    setSelectedSurvey(newSurvey);
+    saveSurveysToLocalStorage(updatedSurveys); // 로컬스토리지에 저장
+  };
+
+  return (
+    <Paper sx={{ padding: 4, maxWidth: 1000, margin: "auto", marginTop: 4 }}>
+      <Typography variant="h4" gutterBottom>
+        설문 관리
+      </Typography>
+      {!selectedSurvey ? (
+        <>
+          <Typography variant="h6">저장된 설문 목록</Typography>
+          <List>
+            {savedSurveys?.map((survey) => (
+              <ListItem
+                style={{ cursor: "pointer" }}
+                // button
+                key={survey.id}
+                onClick={() => setSelectedSurvey(survey)}
+              >
+                <ListItemText primary={survey.title} />
+              </ListItem>
+            ))}
+          </List>
+          <Button
+            variant="outlined"
+            startIcon={<Add />}
+            onClick={() => {
+              createNewSurvey();
+            }}
+          >
+            설문 작성하기
+          </Button>
+        </>
+      ) : (
+        <>
+          <Button onClick={() => setSelectedSurvey(null)}>
+            목록으로 돌아가기
+          </Button>
+          <SurveyForm initialData={selectedSurvey} />
+        </>
+      )}
+    </Paper>
+  );
+};
+
+export default SurveyManager;

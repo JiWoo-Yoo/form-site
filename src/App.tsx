@@ -1,12 +1,12 @@
 // src/App.tsx
 import React from "react";
-import SurveyForm from "./SurveyForm";
 import "./App.css";
+import SurveyManager from "./SurveyManager";
 
 const App: React.FC = () => {
   return (
     <div>
-      <SurveyForm />
+      <SurveyManager />
     </div>
   );
 };
