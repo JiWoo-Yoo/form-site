@@ -24,12 +24,14 @@ type Question = {
 };
 
 type FormValues = {
+  id: string;
   title: string;
   questions: Question[];
 };
 
 type SurveyFormProps = {
-  initialData?: FormValues; // 초기 데이터가 있는 경우
+  initialData?: FormValues;
+  onSave?: (savedSurvey: Survey) => void;
 };
 
 type Survey = {
@@ -38,7 +40,7 @@ type Survey = {
   questions: Question[];
 };
 
-const SurveyForm: React.FC<SurveyFormProps> = ({ initialData }) => {
+const SurveyForm: React.FC<SurveyFormProps> = ({ initialData, onSave }) => {
   const {
     control,
     handleSubmit,
@@ -74,25 +76,29 @@ const SurveyForm: React.FC<SurveyFormProps> = ({ initialData }) => {
   }, [initialData, reset]);
 
   const onSubmit: SubmitHandler<FormValues> = (data) => {
-    console.log("설문 저장: ", data);
-    const dataList = [];
+    const newSurvey: Survey = {
+      id: initialData?.id || String(Date.now()),
+      title: data.title,
+      questions: data.questions,
+    };
+
+    let surveyList: Survey[] = [];
     const localData = localStorage.getItem("survey_data");
     if (localData) {
       try {
-        const parsedSurveys: Survey[] = JSON.parse(localData);
-        dataList.push(parsedSurveys);
+        surveyList = JSON.parse(localData);
       } catch (error) {
-        console.error(
-          "로컬스토리지에서 데이터를 파싱하는 데 실패했습니다:",
-          error
-        );
-        // 파싱에 실패하면 기본 설문 데이터를 유지하거나, 오류 처리 로직을 추가할 수 있습니다.
+        console.error("로컬스토리지 파싱 실패:", error);
       }
     }
-    // 여기서 데이터를 백엔드로 전송하거나 다른 처리를 할 수 있습니다.
-    dataList.push(data);
-    localStorage.setItem("survey_data", JSON.stringify(dataList));
-    reset(); // 제출 후 폼 초기화는 필요에 따라
+
+    const updatedSurveys = initialData
+      ? surveyList.map((s) => (s.id === newSurvey.id ? newSurvey : s))
+      : [...surveyList, newSurvey];
+
+    localStorage.setItem("survey_data", JSON.stringify(updatedSurveys));
+    if (onSave) onSave(newSurvey);
+    reset();
   };
 
   const toggleEditMode = (index: number) => {

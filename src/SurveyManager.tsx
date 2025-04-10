@@ -6,9 +6,11 @@ import {
   Typography,
   Paper,
   Button,
+  IconButton,
 } from "@mui/material";
 import SurveyForm from "./SurveyForm";
-import { Add } from "@mui/icons-material";
+import { Add, Cancel } from "@mui/icons-material";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 type Question = {
   id: string;
@@ -66,6 +68,12 @@ const SurveyManager: React.FC = () => {
     saveSurveysToLocalStorage(updatedSurveys); // 로컬스토리지에 저장
   };
 
+  const handleDeleteSurvey = (id: string) => {
+    const updatedSurveys = savedSurveys.filter((survey) => survey.id !== id);
+    setSavedSurveys(updatedSurveys);
+    saveSurveysToLocalStorage(updatedSurveys);
+  };
+
   return (
     <Paper sx={{ padding: 4, maxWidth: 1000, margin: "auto", marginTop: 4 }}>
       <Typography variant="h4" gutterBottom>
@@ -73,16 +81,32 @@ const SurveyManager: React.FC = () => {
       </Typography>
       {!selectedSurvey ? (
         <>
-          <Typography variant="h6">저장된 설문 목록</Typography>
-          <List>
+          <Typography variant="h6">설문 목록</Typography>
+          <List sx={{ listStyleType: "disc" }}>
             {savedSurveys?.map((survey) => (
               <ListItem
-                style={{ cursor: "pointer" }}
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  pl: 0,
+                }}
+                style={{ cursor: "pointer", listStyleType: "disc" }}
                 // button
                 key={survey.id}
                 onClick={() => setSelectedSurvey(survey)}
               >
                 <ListItemText primary={survey.title} />
+                <IconButton
+                  edge="end"
+                  aria-label="delete"
+                  onClick={(e) => {
+                    e.stopPropagation(); // 클릭이 부모로 전파되지 않게
+                    handleDeleteSurvey(survey.id);
+                  }}
+                >
+                  <DeleteIcon />
+                </IconButton>
               </ListItem>
             ))}
           </List>
@@ -93,7 +117,7 @@ const SurveyManager: React.FC = () => {
               createNewSurvey();
             }}
           >
-            설문 작성하기
+            설문 추가하기
           </Button>
         </>
       ) : (
@@ -101,7 +125,17 @@ const SurveyManager: React.FC = () => {
           <Button onClick={() => setSelectedSurvey(null)}>
             목록으로 돌아가기
           </Button>
-          <SurveyForm initialData={selectedSurvey} />
+          <SurveyForm
+            initialData={selectedSurvey}
+            onSave={(newSurvey) => {
+              const updatedSurveys = savedSurveys.map((s) =>
+                s.id === newSurvey.id ? newSurvey : s
+              );
+              setSavedSurveys(updatedSurveys);
+              saveSurveysToLocalStorage(updatedSurveys);
+              setSelectedSurvey(null); // 목록으로 이동
+            }}
+          />
         </>
       )}
     </Paper>
