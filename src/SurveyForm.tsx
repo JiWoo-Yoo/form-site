@@ -1,5 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { useForm, useFieldArray, SubmitHandler } from "react-hook-form";
+import {
+  useForm,
+  useFieldArray,
+  SubmitHandler,
+  Controller,
+} from "react-hook-form";
 import {
   TextField,
   Button,
@@ -179,18 +184,25 @@ const SurveyForm: React.FC<SurveyFormProps> = ({ initialData, onSave }) => {
                 />
 
                 {/* 질문 유형 */}
-                <TextField
-                  select
-                  label="Question type"
-                  variant="outlined"
-                  fullWidth
-                  margin="normal"
-                  defaultValue="text"
-                  {...register(`questions.${index}.type` as const)}
-                >
-                  <MenuItem value="text">Text</MenuItem>
-                  <MenuItem value="multipleChoice">Multiple choice</MenuItem>
-                </TextField>
+                <Controller
+                  control={control}
+                  name={`questions.${index}.type`}
+                  render={({ field }) => (
+                    <TextField
+                      select
+                      label="Question type"
+                      variant="outlined"
+                      fullWidth
+                      margin="normal"
+                      {...field}
+                    >
+                      <MenuItem value="text">Text</MenuItem>
+                      <MenuItem value="multipleChoice">
+                        Multiple choice
+                      </MenuItem>
+                    </TextField>
+                  )}
+                />
 
                 {/* 객관식 옵션 */}
                 {type === "multipleChoice" && (
