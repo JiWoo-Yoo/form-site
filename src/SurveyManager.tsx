@@ -9,7 +9,7 @@ import {
   IconButton,
 } from "@mui/material";
 import SurveyForm from "./SurveyForm";
-import { Add, Cancel } from "@mui/icons-material";
+import { Add } from "@mui/icons-material";
 import DeleteIcon from "@mui/icons-material/Delete";
 
 type Question = {
