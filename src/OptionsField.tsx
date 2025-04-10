@@ -23,19 +23,19 @@ const OptionsField: React.FC<Props> = ({
 
   return (
     <Box sx={{ marginTop: 2 }}>
-      <Typography variant="subtitle1">옵션</Typography>
+      <Typography variant="subtitle1">Option</Typography>
       {fields.map((field, k) => (
         <Box
           key={field.id}
           sx={{ display: "flex", alignItems: "center", marginBottom: 1 }}
         >
           <TextField
-            label={`옵션 ${k + 1}`}
+            label={`Option ${k + 1}`}
             variant="outlined"
             {...register(
               `questions.${nestIndex}.options.${k}.optionText` as const,
               {
-                required: "옵션 내용은 필수입니다.",
+                required: "Optional content is required.",
               }
             )}
             error={!!errors.questions?.[nestIndex]?.options?.[k]?.optionText}
@@ -47,7 +47,7 @@ const OptionsField: React.FC<Props> = ({
           <IconButton
             onClick={() => remove(k)}
             color="error"
-            aria-label="옵션 삭제"
+            aria-label="Remove option"
           >
             <Remove />
           </IconButton>
@@ -58,7 +58,7 @@ const OptionsField: React.FC<Props> = ({
         startIcon={<Add />}
         onClick={() => append({ id: "", optionText: "" })}
       >
-        옵션 추가
+        Add Option
       </Button>
     </Box>
   );

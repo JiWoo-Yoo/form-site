@@ -58,13 +58,12 @@ const SurveyManager: React.FC = () => {
   const createNewSurvey = () => {
     const newSurvey: Survey = {
       id: String(Date.now()),
-      title: "제목 없음",
+      title: "NO TITLE",
       questions: [],
     };
 
     const updatedSurveys = [...savedSurveys, newSurvey];
     setSavedSurveys(updatedSurveys);
-    setSelectedSurvey(newSurvey);
     saveSurveysToLocalStorage(updatedSurveys); // 로컬스토리지에 저장
   };
 
@@ -77,11 +76,10 @@ const SurveyManager: React.FC = () => {
   return (
     <Paper sx={{ padding: 4, maxWidth: 1000, margin: "auto", marginTop: 4 }}>
       <Typography variant="h4" gutterBottom>
-        설문 관리
+        SURVEYS
       </Typography>
       {!selectedSurvey ? (
         <>
-          <Typography variant="h6">설문 목록</Typography>
           <List sx={{ listStyleType: "disc" }}>
             {savedSurveys?.map((survey) => (
               <ListItem
@@ -117,13 +115,13 @@ const SurveyManager: React.FC = () => {
               createNewSurvey();
             }}
           >
-            설문 추가하기
+            Add survey
           </Button>
         </>
       ) : (
         <>
           <Button onClick={() => setSelectedSurvey(null)}>
-            목록으로 돌아가기
+            Return to Survey List
           </Button>
           <SurveyForm
             initialData={selectedSurvey}

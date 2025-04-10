@@ -8,8 +8,9 @@ import {
   MenuItem,
   Paper,
 } from "@mui/material";
-import { Add, Remove, Edit, Save } from "@mui/icons-material";
+import { Add, Remove, ZoomIn } from "@mui/icons-material";
 import OptionsField from "./OptionsField";
+import ToastPopup from "./ToastPopup";
 
 type Option = {
   id: string;
@@ -46,6 +47,7 @@ const SurveyForm: React.FC<SurveyFormProps> = ({ initialData, onSave }) => {
     handleSubmit,
     register,
     reset,
+    watch,
     formState: { errors },
   } = useForm<FormValues>({
     defaultValues: initialData || {
@@ -69,11 +71,19 @@ const SurveyForm: React.FC<SurveyFormProps> = ({ initialData, onSave }) => {
   // 각 질문의 수정 모드를 관리하는 상태
   const [editMode, setEditMode] = useState<Set<number>>(new Set());
 
+  const [toastOpen, setToastOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+
   useEffect(() => {
     if (initialData) {
       reset(initialData);
     }
   }, [initialData, reset]);
+
+  // 토스트 닫기 함수
+  const handleToastClose = () => {
+    setToastOpen(false);
+  };
 
   const onSubmit: SubmitHandler<FormValues> = (data) => {
     const newSurvey: Survey = {
@@ -99,6 +109,9 @@ const SurveyForm: React.FC<SurveyFormProps> = ({ initialData, onSave }) => {
     localStorage.setItem("survey_data", JSON.stringify(updatedSurveys));
     if (onSave) onSave(newSurvey);
     reset();
+    // ✅ 저장 성공 시 토스트 띄우기
+    setToastMessage("설문이 저장되었습니다!");
+    setToastOpen(true);
   };
 
   const toggleEditMode = (index: number) => {
@@ -115,60 +128,51 @@ const SurveyForm: React.FC<SurveyFormProps> = ({ initialData, onSave }) => {
 
   return (
     <Paper sx={{ padding: 4, maxWidth: 800, margin: "auto", marginTop: 4 }}>
-      <Typography variant="h4" gutterBottom>
-        {initialData ? "설문 수정" : "설문 작성"}
-      </Typography>
+      <ToastPopup
+        open={toastOpen}
+        message={toastMessage}
+        onClose={handleToastClose}
+      />
       <form onSubmit={handleSubmit(onSubmit)}>
         {/* 설문 제목 */}
         <TextField
-          label="설문 제목"
+          label="Survey title"
           variant="outlined"
           fullWidth
           margin="normal"
-          {...register("title", { required: "설문 제목은 필수입니다." })}
+          {...register("title", { required: "The survey title is required." })}
           error={!!errors.title}
           helperText={errors.title?.message}
         />
 
         {/* 동적 질문 */}
-        {fields.map((field, index) => (
-          <Paper
-            key={field.id}
-            sx={{ padding: 2, marginBottom: 2, position: "relative" }}
-            variant="outlined"
-          >
-            <Typography variant="h6">질문 {index + 1}</Typography>
-            {/* 질문 삭제 버튼 */}
-            <IconButton
-              onClick={() => remove(index)}
-              sx={{ position: "absolute", top: 8, right: 8 }}
-              color="error"
-              aria-label="질문 삭제"
+        {fields.map((field, index) => {
+          const type = watch(`questions.${index}.type`); // 💡 실시간 감지
+          return (
+            <Paper
+              key={field.id}
+              sx={{ padding: 2, marginBottom: 2, position: "relative" }}
+              variant="outlined"
             >
-              <Remove />
-            </IconButton>
-
-            {/* 수정/저장 버튼 */}
-            <IconButton
-              onClick={() => toggleEditMode(index)}
-              sx={{ position: "absolute", top: 8, right: 40 }}
-              color="primary"
-              aria-label={editMode.has(index) ? "저장" : "수정"}
-            >
-              {editMode.has(index) ? <Save /> : <Edit />}
-            </IconButton>
-
-            {editMode.has(index) ? (
-              // 수정 모드일 때 질문 내용과 유형을 입력할 수 있는 필드
+              <Typography variant="h6">Q{index + 1}</Typography>
+              {/* 질문 삭제 버튼 */}
+              <IconButton
+                onClick={() => remove(index)}
+                sx={{ position: "absolute", top: 8, right: 8 }}
+                color="error"
+                aria-label="Remove question"
+              >
+                <Remove />
+              </IconButton>
               <>
                 {/* 질문 내용 */}
                 <TextField
-                  label="질문 내용"
+                  label="Question content"
                   variant="outlined"
                   fullWidth
                   margin="normal"
                   {...register(`questions.${index}.questionText` as const, {
-                    required: "질문 내용은 필수입니다.",
+                    required: "Questions are required.",
                   })}
                   error={!!errors.questions?.[index]?.questionText}
                   helperText={errors.questions?.[index]?.questionText?.message}
@@ -177,51 +181,50 @@ const SurveyForm: React.FC<SurveyFormProps> = ({ initialData, onSave }) => {
                 {/* 질문 유형 */}
                 <TextField
                   select
-                  label="질문 유형"
+                  label="Question type"
                   variant="outlined"
                   fullWidth
                   margin="normal"
                   defaultValue="text"
                   {...register(`questions.${index}.type` as const)}
                 >
-                  <MenuItem value="text">텍스트</MenuItem>
-                  <MenuItem value="multipleChoice">객관식</MenuItem>
+                  <MenuItem value="text">Text</MenuItem>
+                  <MenuItem value="multipleChoice">Multiple choice</MenuItem>
                 </TextField>
 
                 {/* 객관식 옵션 */}
-                {field.type === "multipleChoice" && (
+                {type === "multipleChoice" && (
                   <OptionsField
                     nestIndex={index}
                     {...{ control, register, errors }}
                   />
                 )}
               </>
-            ) : (
-              // 조회 모드일 때 질문 내용을 표시
-              <>
-                <Typography variant="subtitle1">
-                  <strong>질문 내용:</strong> {field.questionText}
-                </Typography>
-                <Typography variant="subtitle1">
-                  <strong>질문 유형:</strong>{" "}
-                  {field.type === "text" ? "텍스트" : "객관식"}
-                </Typography>
-                {field.type === "multipleChoice" && field.options && (
-                  <Typography variant="subtitle1">
-                    <strong>옵션:</strong>{" "}
-                    {field.options.map((opt) => opt.optionText).join(", ")}
-                  </Typography>
-                )}
-              </>
-            )}
-          </Paper>
-        ))}
+            </Paper>
+          );
+        })}
 
         {/* 질문 추가 버튼 */}
-        {editMode.size === 0 && ( // 전체 작성 폼이 아닌 개별 수정 모드일 때만 질문 추가 가능
+        <div
+          style={{
+            width: "100%",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
           <Button
             variant="contained"
-            startIcon={<Add />}
+            sx={{
+              minWidth: "40px",
+              width: "40px",
+              height: "40px",
+              borderRadius: "50%",
+              padding: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
             onClick={() =>
               append({
                 id: "",
@@ -231,19 +234,21 @@ const SurveyForm: React.FC<SurveyFormProps> = ({ initialData, onSave }) => {
               })
             }
           >
-            질문 추가
+            <Add />
           </Button>
-        )}
+        </div>
 
-        {/* 제출 버튼 */}
-        <Button
-          type="submit"
-          variant="contained"
-          color="primary"
-          sx={{ marginTop: 2, marginLeft: 2 }}
-        >
-          {initialData ? "설문 수정 저장" : "설문 제출"}
-        </Button>
+        {/* 저장 버튼 */}
+        <div style={{ textAlign: "right" }}>
+          <Button
+            type="submit"
+            variant="contained"
+            color="secondary"
+            sx={{ marginTop: 2, marginLeft: 2 }}
+          >
+            Save
+          </Button>
+        </div>
       </form>
     </Paper>
   );
