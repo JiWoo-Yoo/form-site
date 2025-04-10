@@ -1,12 +1,7 @@
 import React from "react";
-import { useFieldArray, Control, RegisterOptions } from "react-hook-form";
+import { useFieldArray, Control } from "react-hook-form";
 import { TextField, IconButton, Typography, Button, Box } from "@mui/material";
 import { Add, Remove } from "@mui/icons-material";
-
-type Option = {
-  id: string;
-  optionText: string;
-};
 
 type Props = {
   nestIndex: number;

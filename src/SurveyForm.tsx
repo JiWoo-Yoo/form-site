@@ -8,7 +8,7 @@ import {
   MenuItem,
   Paper,
 } from "@mui/material";
-import { Add, Remove, Edit, Save, Cancel } from "@mui/icons-material";
+import { Add, Remove, Edit, Save } from "@mui/icons-material";
 import OptionsField from "./OptionsField";
 
 type Option = {
