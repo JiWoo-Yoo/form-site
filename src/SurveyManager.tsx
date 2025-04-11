@@ -131,7 +131,6 @@ const SurveyManager: React.FC = () => {
               );
               setSavedSurveys(updatedSurveys);
               saveSurveysToLocalStorage(updatedSurveys);
-              setSelectedSurvey(null); // 목록으로 이동
             }}
           />
         </>
